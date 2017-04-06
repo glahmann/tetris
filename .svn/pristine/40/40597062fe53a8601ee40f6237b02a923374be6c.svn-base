@@ -1,0 +1,29 @@
+/**
+ * 
+ */
+package view;
+
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+
+/**
+ * @author Garrett Lahmann
+ * @version 2 December 2016
+ */
+public class TetrisMenuBar extends JMenuBar {
+
+    /**
+     * TODO add menuItems.
+     * TODO add button listeners.
+     */
+    public TetrisMenuBar() {
+        super();
+        
+        final JMenu fileMenu = new JMenu("File");
+        final JMenu optionMenu = new JMenu("Options");
+        
+        add(fileMenu);
+        add(optionMenu);
+    }
+
+}

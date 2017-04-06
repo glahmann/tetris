@@ -1,0 +1,197 @@
+/*
+ * TCSS 305
+ * Assignment 6 - Tetris
+ */
+package view;
+
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.MouseEvent;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.BoxLayout;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.Timer;
+import javax.swing.event.MouseInputAdapter;
+
+import model.Board;
+
+/**
+ * Class that builds a Tetris GUI.
+ * 
+ * @author Garrett Lahmann
+ * @version 2 December 2016
+ */
+public class TetrisGUI extends JFrame implements Observer {
+
+    /** Auto-generated serial version user ID. */
+    private static final long serialVersionUID = 6889637726788853913L;
+
+    /** The timer delay in milliseconds. */
+    private static final int TIMER_DELAY = 1000;
+    
+    /** The Tetris board. */
+    private Board myBoard;  // TODO make modifiable
+    
+    /** A game panel to display the current game being played. */
+    private final GamePanel myGamePanel;
+    
+    /** A preview panel to display the next queued tetromino. */
+    private final PreviewPanel myPreviewPanel;
+    
+    /** A score panel to keep track of scoring information. */
+    private final ScorePanel myScorePanel;
+    
+    /** A game timer. */
+    private Timer myTimer;
+    
+    /** A boolean that tells if the mouse is on the game panel. */
+    private boolean myOnPanelBool;
+    
+    /**
+     * Constructs a new TetrisGUI.
+     */
+    public TetrisGUI() {
+        super("TCSS 305 - Tetris");
+        //myGamePanel = new GamePanel(); // TODO make me scale dynamically
+        myBoard = new Board();
+        // TODO put in own method or class
+        myGamePanel = new GamePanel(myBoard.getWidth(), myBoard.getHeight());
+        myPreviewPanel = new PreviewPanel(myBoard.getWidth(), myBoard.getWidth());
+        myScorePanel = new ScorePanel(myBoard.getWidth(), myBoard.getWidth());
+        
+        // Add observers
+        myBoard.addObserver(this);
+        myBoard.addObserver(myGamePanel);
+        myBoard.addObserver(myPreviewPanel);
+        myBoard.addObserver(myScorePanel);
+    }
+    
+    /**
+     * Displays the GUI. // TODO modularize
+     */
+    public void start() {
+        myBoard.newGame();  // Must be called before game can start
+        myTimer = new Timer(TIMER_DELAY, new TimeChecker());
+        myTimer.start();
+        
+        final MouseInputAdapter mia = new MyMouseInputAdapter();
+        addMouseListener(mia);
+        myGamePanel.addMouseListener(mia);
+        
+        final JPanel gamePanel = new JPanel();
+        gamePanel.add(myGamePanel, BorderLayout.CENTER);
+        add(gamePanel);
+        
+        final KeyPanel keyPanel = new KeyPanel(myBoard, myGamePanel);
+        final TetrisMenuBar menuBar = new TetrisMenuBar(keyPanel);
+        setJMenuBar(menuBar);
+           
+        final JPanel eastPanel = new JPanel();
+        eastPanel.setLayout(new BoxLayout(eastPanel, BoxLayout.PAGE_AXIS));
+        eastPanel.add(myPreviewPanel);
+        eastPanel.add(myScorePanel);
+        add(eastPanel, BorderLayout.EAST);
+        
+        pack();
+        setComponentListener();
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null); // Center on screen TODO recenter for resize?
+        setVisible(true);
+    }
+    
+    /**
+     * Returns the current frame dimensions.
+     */
+    private void setComponentListener() {
+        getRootPane().addComponentListener(new ComponentAdapter() {
+            public void componentResized(final ComponentEvent theEvent) {
+                System.out.println(getBounds().getSize().getWidth() + " "
+                                   + getBounds().getSize().getHeight());
+                myGamePanel.setScale(getBounds().getSize());
+            }
+        });
+    }
+
+    /**
+     * 
+     * 
+     * @param theObservable
+     * @param theObject
+     */
+    @Override
+    public void update(final Observable theObservable, final Object theObject) {
+        // Check for game over boolean
+        if (theObject instanceof Boolean && (boolean) theObject) { 
+            myTimer.stop();
+        }
+    }
+    
+    // ********** Inner Classes **********
+    
+    /**
+     * TODO consolidate with timer?
+     * 
+     * @author Garrett Lahmann
+     * @version 2 December 2016
+     */
+    class TimeChecker implements ActionListener {
+        /**
+         * @param theEvent  a timer event.
+         */
+        @Override
+        public void actionPerformed(final ActionEvent theEvent) {
+            myBoard.down();     // Move piece down on every timer event
+        }
+    }
+    
+    /**
+     * 
+     * @author Garrett Lahmann
+     * @version 2 December 2016
+     */
+    class MyMouseInputAdapter extends MouseInputAdapter {
+        
+        /**
+         * 
+         * @param theEvent
+         */
+        @Override
+        public void mouseReleased(final MouseEvent theEvent) {
+            if (myOnPanelBool) {
+                myTimer.start();
+                myGamePanel.setPause(false);
+            } else {
+                myTimer.stop();
+                myGamePanel.setPause(true);
+            }
+        }
+        
+        /**
+         * 
+         * @param theEvent
+         */
+        @Override
+        public void mouseEntered(final MouseEvent theEvent) {
+            if (theEvent.getComponent().equals(myGamePanel)) {
+                myOnPanelBool = true;
+            }
+        }
+        
+        /**
+         * 
+         * @param theEvent
+         */
+        @Override
+        public void mouseExited(final MouseEvent theEvent) {
+            if (theEvent.getComponent().equals(myGamePanel)) {
+                myOnPanelBool = false;
+            }
+        }    
+    }
+}

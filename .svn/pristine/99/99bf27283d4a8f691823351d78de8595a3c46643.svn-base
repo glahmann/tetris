@@ -1,0 +1,115 @@
+/*
+ * TCSS 305
+ * Assignment 6 - Tetris
+ */
+package view;
+
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.JPanel;
+
+/**
+ * Builds a panel to show scoring information.
+ * 
+ * @author Garrett Lahmann
+ * @version 2 December 2016
+ */
+public class ScorePanel extends JPanel implements Observer {
+
+    /** Auto-generated serial version user ID. */
+    private static final long serialVersionUID = 7368198900688429442L;
+
+    /** The number of completed lines required to level up. */
+    private static final int LEVEL_UP = 5;
+    
+    /** The scale for resizing. */
+//    private static final int SCALE = 20;
+    
+    /** The scoring factor. */
+    private static final int SCORING_FACTOR = 100;
+    
+    /** Starting x location for score text. */
+    private static final int X_INIT = 20;
+    
+    /** Starting y location for score text. */
+    private static final int Y_INIT = 30;
+    
+    /** */
+    private static final Dimension SIZE = new Dimension(200, 200);
+    
+    /** */
+    private final GamePanel myGamePanel;
+    
+    /** The user's score. */
+    private int myScore;
+    
+    /** The user's level. */
+    private int myLevel;
+    
+    /** The user's completed line count. */
+    private int myLines;
+    
+    /**
+     * Constructs a new score panel and initializes fields.
+     * 
+     * @param theGamePanel  a tetris game panel.
+     */
+    public ScorePanel(final GamePanel theGamePanel) {
+        super();
+        myGamePanel = theGamePanel;
+        setPreferredSize(SIZE);
+        setMinimumSize(getPreferredSize());
+        myLevel = 1;
+        myScore = 0;
+        myLines = 0;
+        repaint();
+    }
+    
+    /**
+     * Paints score information to the panel.
+     * 
+     * @param theGraphic    the graphics object.
+     */
+    @Override
+    public void paintComponent(final Graphics theGraphic) {
+        super.paintComponent(theGraphic);
+        final Graphics2D g2d = (Graphics2D) theGraphic; // TODO is g2d necessary?
+        g2d.setPaint(Color.BLACK);
+        
+        g2d.drawString("Level: " + myLevel, X_INIT, Y_INIT);
+        g2d.drawString("Score: " + myScore, X_INIT, Y_INIT + X_INIT);
+        g2d.drawString("Lines: " + myLines, X_INIT,  Y_INIT + X_INIT * 2);
+        g2d.drawString("Lines to next level: " + (LEVEL_UP - myLines % LEVEL_UP), X_INIT, 
+                       Y_INIT * 2 + X_INIT * 2); 
+        // TODO Scoring Rules
+    }
+
+    /**
+     * Observes a Tetris board and updates when scoring data is received.
+     * 
+     * @param theObservable the observable object.
+     * @param theObject     the object broadcasted by the observable object.
+     */
+    @Override
+    public void update(final Observable theObservable, final Object theObject) {
+        if (theObject instanceof Integer[]) {
+            final Integer[] rows = (Integer[]) theObject;
+            myScore += Math.pow(2, rows.length - 1) * SCORING_FACTOR; 
+            myLines += rows.length; 
+            if (myLines / LEVEL_UP + 1 > myLevel) {
+                myGamePanel.setTimerDelay(myLevel + 1);
+            }
+            myLevel = myLines / LEVEL_UP + 1;
+
+            
+            
+            repaint();
+        }
+    }
+
+}

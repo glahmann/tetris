@@ -1,0 +1,323 @@
+/*
+ * TCSS 305
+ * Assignment 6 - Tetris
+ */
+package view;
+
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JFrame;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JSlider;
+import javax.swing.KeyStroke;
+import javax.swing.border.Border;
+import javax.swing.border.EtchedBorder;
+import javax.swing.border.TitledBorder;
+
+import model.Board;
+
+/**
+ * Class that builds a Tetris GUI.
+ * 
+ * @author Garrett Lahmann
+ * @version 10 December 2016
+ */
+public class TetrisGUI extends JFrame implements Observer, PropertyChangeListener {
+
+    /** Auto-generated serial version user ID. */
+    private static final long serialVersionUID = 6889637726788853913L;
+    
+    /** Min for width slider. */
+    private static final int MIN_WIDTH = 5;
+    
+    /** Max for width slider. */
+    private static final int MAX_WIDTH = 55;
+    
+    /** Start value for width slider. */
+    private static final int INIT_WIDTH = 10;
+    
+    /** Min for height slider. */
+    private static final int MIN_HEIGHT = 10;
+    
+    /** Max for height slider. */
+    private static final int MAX_HEIGHT = 30;
+    
+    /** Start value for height slider. */
+    private static final int INIT_HEIGHT = 20;
+    
+    /** An icon to be used on the frame. */
+    private static final String ICON = "./images/mrSkeltal.png";
+    
+    /** The Tetris board. */
+    private Board myBoard; 
+    
+    /** A game panel to display the current game being played. */
+    private GamePanel myGamePanel;
+    
+    /** A preview panel to display the next queued tetromino. */
+    private PreviewPanel myPreviewPanel;
+    
+    /** A score panel to keep track of scoring information. */
+    private ScorePanel myScorePanel;
+    
+    /** A slider for width. */
+    private final JSlider myWidthSlider;
+    
+    /** A slider for height. */
+    private final JSlider myHeightSlider;
+    
+    /** A new game menu item. */
+    private final JMenuItem myNewButton;
+    
+    /** An end game menu item. */
+    private final JMenuItem myEndButton;
+    
+    /** A panel to hold game panel. */
+    private JPanel myCenterPanel;
+    
+    /** A panel to hold preview panel. */
+    private JPanel myNorthEastPanel;
+    
+    /** A panel to hold score panel. */
+    private JPanel mySouthEastPanel;
+    
+    /** A panel to hold preview and stat panels. */
+    private JPanel myEastPanel;
+    
+    /** A panel to hold key binding information. */
+    private KeyPanel myKeyPanel;
+    
+    /** A menu bar. */
+    private TetrisMenuBar myMenuBar;
+    
+    /** A check box for toggling grid lines. */
+    private JCheckBoxMenuItem myGridCheck;
+    
+    /**
+     * Constructs a new TetrisGUI.
+     */
+    public TetrisGUI() {
+        super("TCSS 305 - Tetris");
+
+        myBoard = new Board();
+        myGamePanel = new GamePanel(myBoard);
+        myPreviewPanel = new PreviewPanel();
+        myScorePanel = new ScorePanel(myGamePanel);
+        
+        myWidthSlider = new JSlider(JSlider.HORIZONTAL, MIN_WIDTH, MAX_WIDTH, 
+                                          INIT_WIDTH);
+        myHeightSlider = new JSlider(JSlider.HORIZONTAL, MIN_HEIGHT, MAX_HEIGHT, 
+                                          INIT_HEIGHT);
+        myNewButton = new JMenuItem("New Game");
+        myEndButton = new JMenuItem("End Game");
+        myEndButton.setEnabled(false);
+    }
+    
+    /**
+     * Displays the GUI.
+     */
+    public void start() {
+        setIconImage(new ImageIcon(ICON).getImage());
+        addObservers();
+        myBoard.newGame();  // Must be called before game can start
+        
+        myNewButton.addActionListener(new StartEndListener());
+        myEndButton.addActionListener(new StartEndListener());
+        
+        myGridCheck = new JCheckBoxMenuItem("Grid");
+        myGridCheck.addActionListener(new CheckBoxListener());
+        myGridCheck.setAccelerator(KeyStroke.getKeyStroke('G',
+                                   java.awt.event.InputEvent.CTRL_MASK));
+        
+        // Setup center panel
+        myCenterPanel = new JPanel();
+        myCenterPanel.add(myGamePanel, BorderLayout.CENTER);
+        myCenterPanel.setBorder(buildBorder("Game Board"));
+        
+        add(myCenterPanel, BorderLayout.CENTER);
+        
+        myKeyPanel = new KeyPanel(myBoard, myGamePanel);
+        myKeyPanel.clearBindings(); // Disable bindings for start
+        myMenuBar = new TetrisMenuBar(myKeyPanel, myWidthSlider, 
+                                                        myHeightSlider, myNewButton, 
+                                                        myEndButton, myGridCheck);
+        setJMenuBar(myMenuBar);
+        
+        // Setup preview panel
+        myNorthEastPanel = new JPanel();
+        myNorthEastPanel.add(myPreviewPanel);
+        myNorthEastPanel.setBorder(buildBorder("Next Piece"));
+        
+        // Setup score panel
+        mySouthEastPanel = new JPanel();
+        mySouthEastPanel.add(myScorePanel);
+        mySouthEastPanel.setBorder(buildBorder("Stats"));
+        
+        myEastPanel = new JPanel();
+        myEastPanel.setLayout(new BoxLayout(myEastPanel, BoxLayout.PAGE_AXIS));
+        myEastPanel.add(myNorthEastPanel);
+        myEastPanel.add(mySouthEastPanel);
+        add(myEastPanel, BorderLayout.EAST);
+        
+        setResizable(false);
+        pack();
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null); 
+        setVisible(true);
+    }
+    
+    /**
+     * Starts a new Tetris game.
+     */
+    private void startGame() {
+        myGridCheck.setSelected(false);
+        
+        myBoard.deleteObservers();
+        myBoard = new Board(myWidthSlider.getValue(), myHeightSlider.getValue());
+
+        myCenterPanel.removeAll();
+        myGamePanel = new GamePanel(myBoard);
+        myCenterPanel.add(myGamePanel);
+        
+        myNorthEastPanel.removeAll();
+        myPreviewPanel = new PreviewPanel();
+        myNorthEastPanel.add(myPreviewPanel);
+        
+        mySouthEastPanel.removeAll();
+        myScorePanel = new ScorePanel(myGamePanel);
+        mySouthEastPanel.add(myScorePanel);
+        
+        myEastPanel.add(myNorthEastPanel);
+        myEastPanel.add(mySouthEastPanel);
+        
+        myKeyPanel.resetBindings(myBoard, myGamePanel);        
+        
+        myMenuBar.removeAll();
+        myMenuBar = new TetrisMenuBar(myKeyPanel, myWidthSlider, 
+                                      myHeightSlider, myNewButton, 
+                                      myEndButton, myGridCheck);
+        setJMenuBar(myMenuBar);
+
+        pack();            
+        addObservers();
+        myBoard.newGame();
+        myGamePanel.start();
+    }
+    
+    /**
+     * Builds a lowered etched titled border.
+     * 
+     * @param theTitle  the title to add to a border.
+     * @return  a formatted titled border.
+     */
+    private TitledBorder buildBorder(final String theTitle) {
+        final Border loweredetched = BorderFactory.createEtchedBorder(EtchedBorder.LOWERED);
+        final TitledBorder border = BorderFactory.createTitledBorder(loweredetched, theTitle);
+        border.setTitleJustification(TitledBorder.LEFT);
+        return border;
+    }
+    
+    /**
+     * Ends the current Tetris game.
+     */
+    private void endGame() {
+        myKeyPanel.clearBindings();
+        myGamePanel.endGame();
+    }
+    
+    /**
+     * Add board observers.
+     */
+    private void addObservers() {
+        myBoard.addObserver(this);
+        myBoard.addObserver(myGamePanel);
+        myBoard.addObserver(myPreviewPanel);
+        myBoard.addObserver(myScorePanel);
+        
+        myGamePanel.addPropertyChangeListener(this);
+    }
+    
+    /**
+     * A listener that turns new game/end game buttons on and off.
+     * 
+     * @param theEvent  a property change event.
+     */
+    @Override
+    public void propertyChange(final PropertyChangeEvent theEvent) {
+        System.out.println("PropertyChanged!");
+        if ("GameOver".equals(theEvent.getPropertyName())) {
+            if ((boolean) theEvent.getNewValue()) {
+                myNewButton.setEnabled(true);
+                myEndButton.setEnabled(false);
+            }
+        } else if ("GameStart".equals(theEvent.getPropertyName())) {
+            if ((boolean) theEvent.getNewValue()) {
+                System.out.println("GameStart fired");
+                myNewButton.setEnabled(false);
+                myEndButton.setEnabled(true);
+            }
+        }
+    }
+    
+    /**
+     * Observes a Tetris board and updates when a new string representation of the board is 
+     * received.
+     * 
+     * @param theObservable the observable object.
+     * @param theObject     the object broadcasted by the observable object.
+     */
+    @Override
+    public void update(final Observable theObservable, final Object theObject) {
+        if (theObject instanceof Boolean) {
+            endGame();
+            System.out.println("End");
+        }
+    }
+    
+    // ********** Inner Classes **********
+    
+    /**
+     * Toggles grid lines on game panel.
+     * 
+     * @author Garrett Lahmann
+     * @version 10 December 2016
+     */
+    class CheckBoxListener implements ActionListener {
+        @Override
+        public void actionPerformed(final ActionEvent theEvent) {
+            if (myGridCheck.isSelected()) {
+                myGamePanel.setGrid(true);
+            } else {
+                myGamePanel.setGrid(false);
+            }
+        }
+    }
+    
+    /**
+     * Starts or ends game based on event.
+     * 
+     * @author Garrett Lahmann
+     * @version 10 December 2016
+     */
+    class StartEndListener implements ActionListener {
+        @Override
+        public void actionPerformed(final ActionEvent theEvent) {
+            if (myNewButton.isEnabled()) {
+                startGame();
+            } else {
+                endGame();
+            }
+        }
+    }
+}

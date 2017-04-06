@@ -1,0 +1,76 @@
+/*
+ * TCSS 305
+ * Assignment 6 - Tetris
+ */
+package view;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+
+
+/**
+ * 
+ * 
+ * @author Garrett Lahmann
+ * @version 2 December 2016
+ */
+public class TetrisMenuBar extends JMenuBar {
+
+    /** Auto-generated serial version user ID. */
+    private static final long serialVersionUID = 6953223849934404758L;
+    
+    /** */
+    private final KeyPanel myKeyPanel;
+    
+    /**
+     * TODO add menuItems.
+     * TODO add button listeners.
+     * @param theKeyPanel   a key panel.
+     */
+    public TetrisMenuBar(final KeyPanel theKeyPanel) {
+        super();
+        myKeyPanel = theKeyPanel;
+
+        final JMenu fileMenu = new JMenu("File");
+        final JMenu optionMenu = buildOptionMenu();
+        
+        add(fileMenu);
+        add(optionMenu);
+    }
+
+    /**
+     * 
+     * 
+     * @return a complete options menu.
+     */
+    private JMenu buildOptionMenu() {
+        final JMenu menu = new JMenu("Options");
+        final JMenuItem controls = buildControlItem();
+        menu.add(controls);
+        
+        return menu;
+    }
+    
+    /**
+     * 
+     * 
+     * @return a menu item with action listener.
+     */
+    private JMenuItem buildControlItem() {
+        final JMenuItem item = new JMenuItem("Controls...");
+        item.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent theEvent) {
+                JOptionPane.showMessageDialog(TetrisMenuBar.this, myKeyPanel, "Controls", 
+                                              JOptionPane.INFORMATION_MESSAGE);
+            }
+        });
+        
+        return item;
+    }
+}

@@ -1,0 +1,145 @@
+/*
+ * TCSS 305
+ * Assignment 6 - Tetris
+ */
+package view;
+
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.BoxLayout;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.Timer;
+
+import model.Board;
+
+/**
+ * Class that builds a Tetris GUI.
+ * 
+ * @author Garrett Lahmann
+ * @version 2 December 2016
+ */
+public class TetrisGUI extends JFrame implements Observer, FocusListener {
+
+    /** Auto-generated serial version user ID. */
+    private static final long serialVersionUID = 6889637726788853913L;
+
+    /** The timer delay in milliseconds. */
+    private static final int TIMER_DELAY = 1000;
+    
+    /** The Tetris board. */
+    private Board myBoard;  // TODO make modifiable
+    
+    /** A game panel to display the current game being played. */
+    private final GamePanel myGamePanel;
+    
+    /** A preview panel to display the next queued tetromino. */
+    private final PreviewPanel myPreviewPanel;
+    
+    /** A score panel to keep track of scoring information. */
+    private final ScorePanel myScorePanel;
+    
+    /** TODO make this local? */
+    private Timer myTimer;
+    
+    /**
+     * Constructs a new TetrisGUI.
+     */
+    public TetrisGUI() {
+        super("TCSS 305 - Tetris");
+        //myGamePanel = new GamePanel(); // TODO make me scale dynamically
+        myBoard = new Board();
+        // TODO put in own method or class
+        myGamePanel = new GamePanel(myBoard.getWidth(), myBoard.getHeight());
+        myPreviewPanel = new PreviewPanel(myBoard.getWidth(), myBoard.getWidth());
+        myScorePanel = new ScorePanel(myBoard.getWidth(), myBoard.getWidth());
+        
+        // Add observers
+        myBoard.addObserver(this);
+        myBoard.addObserver(myGamePanel);
+        myBoard.addObserver(myPreviewPanel);
+        myBoard.addObserver(myScorePanel);
+    }
+    
+    /**
+     * Displays the GUI. // TODO modularize
+     */
+    public void start() {
+        myBoard.newGame();  // Must be called before game can start
+        myTimer = new Timer(TIMER_DELAY, new TimeChecker());
+        myTimer.start();
+        
+        final JPanel gamePanel = new JPanel();
+        gamePanel.add(myGamePanel, BorderLayout.CENTER);
+        add(gamePanel);
+        
+        final TetrisMenuBar menuBar = new TetrisMenuBar(new KeyPanel(myBoard, myGamePanel));
+        menuBar.setFocusable(true);
+        menuBar.addFocusListener(this);
+        
+        setJMenuBar(menuBar);
+        
+//        
+        final JPanel eastPanel = new JPanel();
+        eastPanel.setLayout(new BoxLayout(eastPanel, BoxLayout.PAGE_AXIS));
+        eastPanel.add(myPreviewPanel);
+        eastPanel.add(myScorePanel);
+        add(eastPanel, BorderLayout.EAST);
+        
+//        add(new KeyPanel(myBoard), BorderLayout.WEST); // TODO put keybinder in menubar
+        
+        pack();
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null); // Center on screen TODO recenter for resize?
+        setVisible(true);
+    }
+
+    /**
+     * @param theObservable
+     * @param theObject
+     */
+    @Override
+    public void update(final Observable theObservable, final Object theObject) {
+        // Check for game over boolean
+        if (theObject instanceof Boolean && (boolean) theObject) { 
+            myTimer.stop();
+        }
+    }
+    
+    // ********** Inner Classes **********
+    
+    /**
+     * TODO consolidate with timer?
+     * 
+     * @author Garrett Lahmann
+     * @version 2 December 2016
+     */
+    class TimeChecker implements ActionListener {
+        /**
+         * @param theEvent  a timer event.
+         */
+        @Override
+        public void actionPerformed(final ActionEvent theEvent) {
+            myBoard.down();     // Move piece down on every timer event
+        }
+    }
+
+    @Override
+    public void focusGained(FocusEvent e) {
+        myGamePanel.setPause(false);
+        myTimer.start();
+    }
+
+    @Override
+    public void focusLost(FocusEvent e) {
+        // TODO Auto-generated method stub
+        myGamePanel.setPause(true);
+        myTimer.stop();
+    }
+}

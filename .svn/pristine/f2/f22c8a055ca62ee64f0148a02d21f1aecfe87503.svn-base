@@ -1,0 +1,177 @@
+/*
+ * TCSS 305
+ * Assignment 6 - Tetris
+ */
+package view;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+
+import javax.swing.AbstractAction;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.KeyStroke;
+import javax.swing.SpringLayout;
+
+import layout.SpringUtilities;
+import model.Board;
+
+
+/**
+ * This class creates a panel that shows current keybindings and allows for their modification.
+ * 
+ * @author Garrett Lahmann
+ * @version 2 December 2016
+ */
+public class KeyPanel extends JPanel {
+
+    /** Auto-generated serial version user ID. */
+    private static final long serialVersionUID = -5198445984202468054L;
+
+    /** Strings representing available controls for Tetris. */ // TODO make into set or map
+    private static final String[] CONTROLS = {"Left", "Right", "Down", "Rotate", "Drop"};
+    
+    /** Initial control keys. */ 
+    private static final String[] INIT_KEYS = {"LEFT", "RIGHT", "DOWN", "UP", "SPACE"};
+    
+    /**  */
+    private static final int CONTROL_PAIRS = CONTROLS.length;
+    
+    /** */
+    private final Board myBoard;
+    
+    /**
+     * TODO adjust constraints for resizing.
+     * 
+     * @param theBoard  the Tetris game board.
+     */
+    public KeyPanel(final Board theBoard) {
+        super(new SpringLayout());
+        myBoard = theBoard;
+        setControls();
+        
+        // Parameters: (component, rows, columns, initial X, initial Y, xPad, yPad)
+        SpringUtilities.makeCompactGrid(this, CONTROL_PAIRS, 2, 6, 6, 6, 6);
+    }
+    
+    /**
+     * 
+     */
+    private void setControls() {
+        for (int i = 0; i < CONTROL_PAIRS; i++) {
+            final JLabel label = new JLabel(CONTROLS[i], JLabel.TRAILING);
+            add(label);
+            final JTextField textField = new JTextField(INIT_KEYS[i], 5);
+            label.setLabelFor(textField);   // TODO Why do I need this?
+            
+            // Bind controls to initial keys
+            getInputMap().put(KeyStroke.getKeyStroke(INIT_KEYS[i]), CONTROLS[i]);
+            getActionMap().put(CONTROLS[i], new MoveAction(i));
+            
+            //textField.addKeyListener(new TextKeyListener(INIT_KEYS[i], textField));
+            
+            add(textField);
+        }
+    }
+    
+    // ********** Inner Classes **********
+    
+    /**
+     * 
+     * @author Garrett
+     *
+     */
+    private class TextKeyListener implements KeyListener {
+
+        /** The key attached to the game control. */
+        private String myOldKey;
+        
+        private JTextField myTextField;
+        
+        /**
+         * 
+         * @param theOldKey the old key.
+         */
+        TextKeyListener(final String theOldKey, final JTextField theTextField) {
+            myOldKey = theOldKey;
+            myTextField = theTextField;
+        }
+        
+        /**
+         * 
+         */
+        @Override
+        public void keyPressed(KeyEvent theEvent) {
+            // Do nothing
+        }
+
+        /**
+         * 
+         */
+        @Override
+        public void keyReleased(KeyEvent theEvent) {
+            // Do nothing
+        }
+
+        /**
+         * 
+         */
+        @Override
+        public void keyTyped(KeyEvent theEvent) {
+            KeyPanel.this.getInputMap().remove(KeyStroke.getKeyStroke(myOldKey));
+            KeyPanel.this.getInputMap().put(KeyStroke.getKeyStrokeForEvent(theEvent),
+                                            KeyPanel.this.getInputMap().get(
+                                                KeyStroke.getKeyStroke(myOldKey)));
+            myOldKey = KeyEvent.getKeyText(theEvent.getKeyCode());
+            myTextField.setText(myOldKey);
+        }
+        
+    }
+    
+    /**
+     * 
+     * @author Garrett Lahmann
+     * @version 2 December 2016
+     */
+    private class MoveAction extends AbstractAction {
+        
+        /** Auto-generated serial version user ID. */
+        private static final long serialVersionUID = -6471751320992180187L;
+        
+        /**  */
+        private final int myControl;
+        
+        /**
+         * 
+         * 
+         * @param theControl 
+         */
+        MoveAction(final int theControl) {
+            super();
+            myControl = theControl;
+        }
+        
+        /**
+         * 
+         * @param theEvent
+         */
+        @Override
+        public void actionPerformed(final ActionEvent theEvent) {
+            // TODO find better method than if/else
+            if (myControl == 0) {
+                myBoard.left();
+            } else if (myControl == 1) {
+                myBoard.right();
+            } else if (myControl == 2) {
+                myBoard.down();
+            } else if (myControl == 1 + 2) { 
+                myBoard.rotate();
+            } else if (myControl == 2 + 2) {
+                myBoard.drop();
+            }
+        }
+    }
+
+}

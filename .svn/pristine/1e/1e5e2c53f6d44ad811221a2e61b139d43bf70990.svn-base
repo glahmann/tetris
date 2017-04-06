@@ -1,0 +1,185 @@
+/*
+ * TCSS 305
+ * Assignment 6 - Tetris
+ */
+package view;
+
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+//import java.awt.event.ComponentAdapter;
+//import java.awt.event.ComponentEvent;
+
+import javax.swing.BoxLayout;
+import javax.swing.JFrame;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JSlider;
+
+import model.Board;
+
+/**
+ * Class that builds a Tetris GUI.
+ * 
+ * @author Garrett Lahmann
+ * @version 10 December 2016
+ */
+public class TetrisGUI extends JFrame {
+
+    /** Auto-generated serial version user ID. */
+    private static final long serialVersionUID = 6889637726788853913L;
+    
+    /** */
+    private static final int MIN_WIDTH = 5;
+    
+    /** */
+    private static final int MAX_WIDTH = 55;
+    
+    /** */
+    private static final int INIT_WIDTH = 10;
+    
+    /** */
+    private static final int MIN_HEIGHT = 10;
+    
+    /** */
+    private static final int MAX_HEIGHT = 50;
+    
+    /** */
+    private static final int INIT_HEIGHT = 20;
+    
+    /** The Tetris board. */
+    private Board myBoard; 
+    
+    /** A game panel to display the current game being played. */
+    private GamePanel myGamePanel;
+    
+    /** A preview panel to display the next queued tetromino. */
+    private final PreviewPanel myPreviewPanel;
+    
+    /** A score panel to keep track of scoring information. */
+    private final ScorePanel myScorePanel;
+    
+    /** A panel to place the game panel on. */
+//    private final JPanel myCenterPanel;
+    
+    /** */
+    private final JSlider myWidthSlider;
+    
+    /** */
+    private final JSlider myHeightSlider;
+    
+    /** */
+    private final JMenuItem myNewButton;
+    
+    /** */
+    private final JMenuItem myEndButton;
+    
+    /**
+     * Constructs a new TetrisGUI.
+     */
+    public TetrisGUI() {
+        super("TCSS 305 - Tetris");
+
+        myBoard = new Board();
+        myGamePanel = new GamePanel(myBoard);
+        myPreviewPanel = new PreviewPanel();
+        myScorePanel = new ScorePanel(myGamePanel);
+        
+        myWidthSlider = new JSlider(JSlider.HORIZONTAL, MIN_WIDTH, MAX_WIDTH, 
+                                          INIT_WIDTH);
+        myHeightSlider = new JSlider(JSlider.HORIZONTAL, MIN_HEIGHT, MAX_HEIGHT, 
+                                          INIT_HEIGHT);
+        myNewButton = new JMenuItem("New Game");
+        myEndButton = new JMenuItem("End Game");
+        myEndButton.setEnabled(false);
+        
+        
+    }
+    
+    /**
+     * Displays the GUI. // TODO modularize
+     */
+    public void start() {
+        addObservers();
+        myBoard.newGame();  // Must be called before game can start
+        
+        myNewButton.addActionListener(new StartEndListener());
+        myEndButton.addActionListener(new StartEndListener());
+        
+        final JPanel centerPanel = new JPanel();
+        centerPanel.add(myGamePanel, BorderLayout.CENTER);
+        
+        add(centerPanel, BorderLayout.CENTER);
+        
+        final KeyPanel keyPanel = new KeyPanel(myBoard, myGamePanel);
+        final TetrisMenuBar menuBar = new TetrisMenuBar(keyPanel, myWidthSlider, 
+                                                        myHeightSlider, myNewButton, 
+                                                        myEndButton);
+        setJMenuBar(menuBar);
+            
+        final JPanel eastPanel = new JPanel();
+        eastPanel.setLayout(new BoxLayout(eastPanel, BoxLayout.PAGE_AXIS));
+        eastPanel.add(myPreviewPanel);
+        eastPanel.add(myScorePanel);
+        add(eastPanel, BorderLayout.EAST);
+        
+        pack();
+        setResizable(false);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null); // Center on screen TODO recenter for resize?
+        setVisible(true);
+    }
+    
+    /**
+     * 
+     */
+    private void startGame() {
+        myBoard = new Board(myWidthSlider.getValue(), myHeightSlider.getValue());
+        myGamePanel = new GamePanel(myBoard);
+
+        addObservers();
+        myBoard.newGame();
+        myGamePanel.start(myBoard);
+//        myGamePanel.reset();
+        repaint(); // TODO does anything?
+    }
+    
+    /**
+     * 
+     */
+    private void endGame() {
+        myGamePanel.endGame();
+    }
+    
+    /**
+     * Add board observers.
+     */
+    private void addObservers() {
+        myBoard.addObserver(myGamePanel);
+        myBoard.addObserver(myPreviewPanel);
+        myBoard.addObserver(myScorePanel);
+    }
+    
+    // ********** Inner Classes **********
+    
+    /**
+     * 
+     * @author Garrett Lahmann
+     * @version 10 December 2016
+     */
+    class StartEndListener implements ActionListener {
+
+        @Override
+        public void actionPerformed(final ActionEvent theEvent) {
+            if (myNewButton.isEnabled()) {
+                startGame();
+            } else {
+                endGame();
+            }
+            
+            myNewButton.setEnabled(!myNewButton.isEnabled());
+            myEndButton.setEnabled(!myEndButton.isEnabled());
+        }
+    }
+}

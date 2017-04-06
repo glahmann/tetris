@@ -1,0 +1,58 @@
+/*
+ * TCSS 305
+ * Assignment 6 - Tetris
+ */
+package view;
+
+import java.awt.BorderLayout;
+import java.awt.GraphicsConfiguration;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.JFrame;
+
+import model.Board;
+
+/**
+ * 
+ * 
+ * @author Garrett Lahmann
+ * @version 2 December 2016
+ */
+public class TetrisGUI extends JFrame implements Observer {
+
+    /** */
+    private Board myBoard;
+    
+    /**
+     * Constructs a new TetrisGUI.
+     */
+    public TetrisGUI() {
+        super("TCSS 305 - Tetris");
+        //myGamePanel = new GamePanel(); // TODO make me scale dynamically
+        
+    }
+    
+    /**
+     * Displays the GUI.
+     */
+    public void start() {
+        
+        
+        setJMenuBar(new TetrisMenuBar());
+        add(new KeyBinder(), BorderLayout.EAST); // TODO put keybinder in menubar
+        pack();
+        setLocationRelativeTo(null); // Center on screen TODO recenter for resize?
+        setVisible(true);
+    }
+
+    @Override
+    public void update(Observable arg0, Object arg1) {
+        // TODO Auto-generated method stub
+        //repaint() // Indirectly calls paintComponent to repaint GUI?
+        // myGamePanel.repaint()?
+        
+    }
+
+
+}

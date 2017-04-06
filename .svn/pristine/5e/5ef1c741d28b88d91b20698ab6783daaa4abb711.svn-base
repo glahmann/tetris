@@ -1,0 +1,126 @@
+/*
+ * TCSS 305
+ * Assignment 6 - Tetris
+ */
+package view;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.Timer;
+
+import model.Board;
+
+/**
+ * 
+ * 
+ * @author Garrett Lahmann
+ * @version 2 December 2016
+ */
+public class TetrisGUI extends JFrame implements Observer {
+
+    /** */
+    private Board myBoard;  // TODO make modifiable
+    
+    /** */
+    private GamePanel myGamePanel;
+    
+    /** */
+    private PreviewPanel myPreviewPanel;
+    
+    /** TODO make this local? */
+    private Timer myTimer;
+    
+    /**
+     * Constructs a new TetrisGUI.
+     */
+    public TetrisGUI() {
+        super("TCSS 305 - Tetris");
+        //myGamePanel = new GamePanel(); // TODO make me scale dynamically
+        myBoard = new Board();
+        // TODO put in own method or class
+        myGamePanel = new GamePanel(); // TODO dynamic sizing and gridlines
+        myPreviewPanel = new PreviewPanel();
+        
+        // Add observers
+        myBoard.addObserver(this);
+        myBoard.addObserver(myGamePanel);
+        myBoard.addObserver(myPreviewPanel);
+    }
+    
+    /**
+     * Displays the GUI.
+     */
+    public void start() {
+        myBoard.newGame();  // Must be called before game can start
+        myTimer = new Timer(200, new TimeChecker());
+        myTimer.start();
+        
+        setJMenuBar(new TetrisMenuBar());
+        add(myGamePanel, BorderLayout.CENTER);
+        add(myPreviewPanel, BorderLayout.EAST);
+        add(new KeyBinder(), BorderLayout.WEST); // TODO put keybinder in menubar
+        
+        
+        pack();
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null); // Center on screen TODO recenter for resize?
+        setVisible(true);
+    }
+    
+    /**
+     *     
+     */
+    public void paintComponent() {
+        
+    }
+
+    /**
+     * @param theObservable
+     * @param theObject
+     */
+    @Override
+    public void update(final Observable theObservable, final Object theObject) {
+        // Check for game over boolean
+        if (theObject instanceof Boolean && (boolean) theObject) { 
+            myTimer.stop();
+            // TODO display game over message
+        } else if (theObject instanceof String) {
+            System.out.println(theObject);
+        } else if (theObject instanceof int[]) {
+            // TODO update score
+        } else {    // MovableTetrisPiece
+            
+        }
+        //System.out.println(myBoard.toString());
+//        repaint();
+        
+    }
+    
+    // ********** Inner Classes **********
+    
+    /**
+     * TODO consolidate with timer?
+     * 
+     * @author Garrett Lahmann
+     * @version 2 December 2016
+     */
+    class TimeChecker implements ActionListener {
+        /**
+         * @param theEvent  a timer event.
+         */
+        @Override
+        public void actionPerformed(final ActionEvent theEvent) {
+            myBoard.down();     // Move piece down on every timer event
+        }
+    }
+
+
+}

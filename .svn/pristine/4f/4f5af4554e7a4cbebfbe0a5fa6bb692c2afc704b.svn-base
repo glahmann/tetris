@@ -1,0 +1,163 @@
+/*
+ * TCSS 305
+ * Assignment 6 - Tetris
+ */
+package view;
+
+import java.awt.BorderLayout;
+
+//import java.awt.event.ComponentAdapter;
+//import java.awt.event.ComponentEvent;
+
+import javax.swing.BoxLayout;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+
+
+import model.Board;
+
+/**
+ * Class that builds a Tetris GUI.
+ * 
+ * @author Garrett Lahmann
+ * @version 2 December 2016
+ */
+public class TetrisGUI extends JFrame {
+
+    /** Auto-generated serial version user ID. */
+    private static final long serialVersionUID = 6889637726788853913L;
+    
+    /** The Tetris board. */
+    private final Board myBoard; 
+    
+    /** A game panel to display the current game being played. */
+    private final GamePanel myGamePanel;
+    
+    /** A preview panel to display the next queued tetromino. */
+    private final PreviewPanel myPreviewPanel;
+    
+    /** A score panel to keep track of scoring information. */
+    private final ScorePanel myScorePanel;
+    
+    /** A panel to place the game panel on. */
+    private final JPanel myCenterPanel;
+    
+    /** A boolean that tells if the mouse is on the game panel. */
+//    private boolean myOnPanelBool;
+    
+    /**
+     * Constructs a new TetrisGUI.
+     */
+    public TetrisGUI() {
+        super("TCSS 305 - Tetris");
+
+        myBoard = new Board();
+        myGamePanel = new GamePanel(myBoard);
+        myPreviewPanel = new PreviewPanel(myBoard.getWidth(), myBoard.getWidth());
+        myScorePanel = new ScorePanel(myGamePanel);
+        myCenterPanel = new JPanel();
+//        setComponentListener();
+        setResizable(false);
+        addObservers();
+    }
+    
+    /**
+     * Displays the GUI. // TODO modularize
+     */
+    public void start() {
+        myBoard.newGame();  // Must be called before game can start
+        
+        myCenterPanel.add(myGamePanel, BorderLayout.CENTER);
+        
+        add(myCenterPanel, BorderLayout.CENTER);
+        
+        final KeyPanel keyPanel = new KeyPanel(myBoard, myGamePanel);
+        final TetrisMenuBar menuBar = new TetrisMenuBar(keyPanel);
+        setJMenuBar(menuBar);
+           
+        final JPanel eastPanel = new JPanel();
+        eastPanel.setLayout(new BoxLayout(eastPanel, BoxLayout.PAGE_AXIS));
+        eastPanel.add(myPreviewPanel);
+        eastPanel.add(myScorePanel);
+        add(eastPanel, BorderLayout.EAST);
+        
+        pack();
+        
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null); // Center on screen TODO recenter for resize?
+        setVisible(true);
+        
+    }
+    
+    /**
+     * Add board observers.
+     */
+    private void addObservers() {
+        myBoard.addObserver(myGamePanel);
+        myBoard.addObserver(myPreviewPanel);
+        myBoard.addObserver(myScorePanel);
+    }
+    
+//    /**
+//     * Returns the current frame dimensions.
+//     */
+//    private void setComponentListener() {
+//        myCenterPanel.addComponentListener(new ComponentAdapter() {
+//            public void componentResized(final ComponentEvent theEvent) {
+//                myGamePanel.setScale(getBounds().getSize(), myScorePanel.getWidth());
+//            }
+//        });
+//    }
+
+    
+    // ********** Inner Classes **********
+    
+//    /**
+//     * Mouse adapter to listen for mouse location and release events.
+//     * 
+//     * @author Garrett Lahmann
+//     * @version 2 December 2016
+//     */
+//    class MyMouseInputAdapter extends MouseInputAdapter {
+//        
+//        /**
+//         * Pauses/unpauses game when mouse released in certain areas.
+//         * 
+//         * @param theEvent  a mouse released event.
+//         */
+//        @Override
+//        public void mouseReleased(final MouseEvent theEvent) {
+//            if (myOnPanelBool) {
+//                myTimer.start();
+//                myGamePanel.setPause(false);
+//            } else {
+//                myTimer.stop();
+//                myGamePanel.setPause(true);
+//            }
+//        }
+//        
+//        /**
+//         * Notifies GUI that mouse is on game panel.
+//         * 
+//         * @param theEvent  a mouse entered event.
+//         */
+//        @Override
+//        public void mouseEntered(final MouseEvent theEvent) {
+//            if (theEvent.getComponent().equals(myGamePanel)) {
+//                myOnPanelBool = true;
+//            }
+//        }
+//        
+//        /**
+//         * Notifies GUI that mouse has left game panel.
+//         * 
+//         * @param theEvent  a mouse exited event.
+//         */
+//        @Override
+//        public void mouseExited(final MouseEvent theEvent) {
+//            if (theEvent.getComponent().equals(myGamePanel)) {
+//                myOnPanelBool = false;
+//            }
+//        }    
+//    }
+}

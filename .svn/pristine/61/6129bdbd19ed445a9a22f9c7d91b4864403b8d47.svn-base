@@ -1,0 +1,44 @@
+/*
+ * TCSS 305
+ * Assignment 6 - Tetris
+ */
+package view;
+
+import java.awt.EventQueue;
+
+import model.Board;
+
+/**
+ * 
+ * 
+ * @author Garrett Lahmann
+ * @version 2 December 2016
+ */
+public final class TetrisMain {
+
+    /**
+     * Private constructor to prevent instantiation.
+     */
+    private TetrisMain() {
+        // Do nothing.
+    }
+
+    /**
+     * @param theArgs   collects command line arguments.
+     */
+    public static void main(final String[] theArgs) {
+        EventQueue.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                final Board gameBoard = new Board();    // Create observable
+                final TetrisGUI view = new TetrisGUI(); // Create observer
+                
+                gameBoard.addObserver(view);    // Register observer
+                
+                view.start();
+            }
+        });
+
+    }
+
+}

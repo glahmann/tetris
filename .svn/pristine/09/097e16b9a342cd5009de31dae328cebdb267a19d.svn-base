@@ -1,0 +1,46 @@
+/**
+ * 
+ */
+package view;
+
+import java.awt.LayoutManager;
+
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SpringLayout;
+
+import layout.SpringUtilities;
+
+
+/**
+ * @author Garrett Lahmann
+ * @version 2 December 2016
+ *
+ */
+public class KeyBinder extends JPanel {
+
+    /**  */
+    private static final String[] CONTROLS = {"Left ", "Right ", "Down ", "Rotate "};
+    
+    /**  */
+    private static final int CONTROL_PAIRS = CONTROLS.length;
+    
+    /**
+     * TODO adjust constraints for resizing.
+     * TODO 
+     */
+    public KeyBinder() {
+        super(new SpringLayout());
+        for (int i = 0; i < CONTROL_PAIRS; i++) {
+            final JLabel label = new JLabel(CONTROLS[i], JLabel.TRAILING);
+            add(label);
+            final JTextField textField = new JTextField(5);
+            label.setLabelFor(textField);   // TODO Why do I need this?
+            add(textField);
+        }
+        // Parameters: (component, rows, columns, initial X, initial Y, xPad, yPad)
+        SpringUtilities.makeCompactGrid(this, CONTROL_PAIRS, 2, 6, 6, 6, 6);
+    }
+
+}

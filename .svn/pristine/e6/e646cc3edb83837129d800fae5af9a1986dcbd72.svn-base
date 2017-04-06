@@ -1,0 +1,215 @@
+/*
+ * TCSS 305
+ * Assignment 6 - Tetris
+ */
+package view;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.swing.AbstractAction;
+import javax.swing.ActionMap;
+import javax.swing.InputMap;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.KeyStroke;
+import javax.swing.SpringLayout;
+
+import layout.SpringUtilities;
+import model.Board;
+
+
+/**
+ * This class creates a panel that shows current keybindings and allows for their modification.
+ * 
+ * @author Garrett Lahmann
+ * @version 2 December 2016
+ */
+public class KeyPanel extends JPanel {
+
+    /** Auto-generated serial version user ID. */
+    private static final long serialVersionUID = -5198445984202468054L;
+
+    /** Strings representing available controls for Tetris. */ // TODO make into set or map
+    private static final String[] CONTROLS = {"Left", "Right", "Down", "Rotate", "Drop"};
+    
+    /** Initial control keys. */ 
+    private static final String[] INIT_KEYS = {"LEFT", "RIGHT", "DOWN", "UP", "SPACE"};
+    
+    /** The number of controls for the game. */
+    private static final int CONTROL_PAIRS = CONTROLS.length;
+    
+    /** An integer to set the location and padding of the Spring Layout. */
+    private static final int PAD = 6;
+    
+    
+    /** A Tetris game board. */
+    private final Board myBoard;
+    
+    /** An action map for key binding. */
+    private final ActionMap myActionMap;
+    
+    /** An input map for key binding. */
+    private final InputMap myInputMap;
+    
+    /** A set of current key binding Strings. */
+    private final Set<String> myBindings;
+    
+    /**
+     * TODO adjust constraints for resizing.
+     * 
+     * @param theBoard  a Tetris game board.
+     * @param theLabel  a JLabel to attach key bindings to.
+     */
+    public KeyPanel(final Board theBoard, final JLabel theLabel) {
+        super(new SpringLayout());
+        myBoard = theBoard;
+        myActionMap = theLabel.getRootPane().getActionMap();
+        myInputMap = theLabel.getRootPane().getInputMap();
+        myBindings = new HashSet<String>();
+        setControls();
+        
+        // Parameters: (component, rows, columns, initial X, initial Y, xPad, yPad)
+        SpringUtilities.makeCompactGrid(this, CONTROL_PAIRS, 2, PAD, PAD, PAD, PAD);
+    }
+    
+    /**
+     * 
+     */
+    private void setControls() {
+        
+        
+        for (int i = 0; i < CONTROL_PAIRS; i++) {
+            final JLabel label = new JLabel(CONTROLS[i], JLabel.TRAILING);
+            add(label);
+            final JTextField textField = new JTextField(INIT_KEYS[i], 10);
+            label.setLabelFor(textField);   // TODO Why do I need this?
+            
+            // Bind controls to initial keys
+            myInputMap.put(KeyStroke.getKeyStroke(INIT_KEYS[i]), CONTROLS[i]);
+            myActionMap.put(CONTROLS[i], new MoveAction(i));
+            myBindings.add(INIT_KEYS[i]);
+            
+            
+            textField.addKeyListener(new TextKeyListener(INIT_KEYS[i], textField));
+            
+            add(textField);
+        }
+    }
+    
+    // ********** Inner Classes **********
+    
+    /**
+     * A key listener class that re-binds a control to the key entered in a text field. 
+     * 
+     * @author Garrett Lahmann
+     * @version 2 December 2016
+     */
+    private class TextKeyListener extends KeyAdapter {
+
+        /** The key attached to the game control. */
+        private String myOldKey;
+        
+        /** The text field for game control entry. */
+        private final JTextField myTextField;
+        
+        /**
+         * Constructs a key listener.
+         * 
+         * @param theOldKey     the old key.
+         * @param theTextField  a text field for control selection.
+         */
+        TextKeyListener(final String theOldKey, final JTextField theTextField) {
+            super();
+            myOldKey = theOldKey;
+            myTextField = theTextField;
+        }
+        
+        /**
+         * Re-binds a control to a key pressed in a text field.
+         * 
+         * @param theEvent  a key pressed event.
+         */
+        @Override
+        public void keyPressed(final KeyEvent theEvent) {
+            final String newKey = KeyEvent.getKeyText(theEvent.getKeyCode()).toUpperCase();
+            
+            // Check if keystroke is used by other binding
+            if (!myBindings.contains(newKey)) {     
+                final Object oldBinding = myInputMap.get(KeyStroke.getKeyStroke(myOldKey));
+                
+                // Remove old binding
+                myInputMap.remove(KeyStroke.getKeyStroke(myOldKey));
+                myBindings.remove(myOldKey);
+                
+                // Re-bind with key stroke from key event
+                myInputMap.put(KeyStroke.getKeyStrokeForEvent(theEvent),
+                               oldBinding);
+                myBindings.add(newKey);
+    
+                myOldKey = newKey;
+            }
+        }
+
+        /**
+         * Sets a text field to show the new key binding.
+         * 
+         * @param theEvent  a key release event.
+         */
+        @Override
+        public void keyReleased(final KeyEvent theEvent) {
+            myTextField.setText(myOldKey);
+        }        
+    }
+    
+    /**
+     * Action listener that calls one of the Tetris board's movement methods when activated.
+     * 
+     * @author Garrett Lahmann
+     * @version 2 December 2016
+     */
+    private class MoveAction extends AbstractAction {
+        
+        /** Auto-generated serial version user ID. */
+        private static final long serialVersionUID = -6471751320992180187L;
+        
+        /** An integer representing which control is attached. */
+        private final int myControl;
+        
+        /**
+         * Constructs a move action listener.
+         * 
+         * @param theControl an integer representing which control is attached.
+         */
+        MoveAction(final int theControl) {
+            super();
+            myControl = theControl;
+        }
+        
+        /**
+         * Calls one of the board's movement methods when and action event occurs.
+         * 
+         * @param theEvent  an action event.
+         */
+        @Override
+        public void actionPerformed(final ActionEvent theEvent) {
+            // TODO find better method than if/else
+            if (myControl == 0) {
+                myBoard.left();
+            } else if (myControl == 1) {
+                myBoard.right();
+            } else if (myControl == 2) {
+                myBoard.down();
+            } else if (myControl == 1 + 2) { 
+                myBoard.rotate();
+            } else if (myControl == 2 + 2) {
+                myBoard.drop();
+            }
+        }
+    }
+
+}
